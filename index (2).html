@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BounceQuiz AI - Binatang Laut dan Darat</title>
+<style>
+:root{--navy:#16324f;--blue:#38bdf8;--aqua:#cffafe;--green:#22c55e;--yellow:#fde047;--pink:#f9a8d4;--ink:#17324d}
+*{box-sizing:border-box}
+body{margin:0;font-family:"Trebuchet MS",Arial,sans-serif;color:var(--ink);background:linear-gradient(145deg,#dff7ff,#e9fbe9 55%,#fff5d6);min-height:100vh}
+header{padding:18px 22px;background:linear-gradient(100deg,#0e7490,#2563eb);color:white;box-shadow:0 5px 18px #164e6333}
+.head{max-width:1100px;margin:auto;display:flex;gap:14px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.brand{font-size:clamp(25px,4vw,36px);font-weight:900;letter-spacing:.3px}
+.subtitle{font-size:14px;opacity:.95;margin-top:4px}
+.pill{background:#ffffff25;border:1px solid #ffffff55;border-radius:999px;padding:8px 13px;font-weight:700;font-size:13px}
+main{max-width:1100px;margin:20px auto;padding:0 16px 35px}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.info div,.stat,.panel,.game-wrap{background:#ffffffdf;border:1px solid #d8edf5;border-radius:18px;padding:13px 16px;box-shadow:0 5px 18px #164e6310}
+.info b{display:block;font-size:11px;color:#47718a;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.info span{font-weight:800}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:12px}
+.stat{text-align:center;font-weight:700}
+.stat strong{display:block;font-size:25px;color:#0369a1}
+.progress{height:13px;background:#dbeafe;border-radius:20px;overflow:hidden;margin:10px 0 18px}
+.progress>div{height:100%;width:0;background:linear-gradient(90deg,#22c55e,#84cc16);transition:width .3s}
+.game-wrap{padding:14px;position:relative}
+.game-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:0 4px 10px}
+.game-title h2{font-size:20px;margin:0}
+.controls{display:flex;gap:8px;flex-wrap:wrap}
+button{border:0;border-radius:13px;padding:11px 16px;font-weight:800;font-size:14px;cursor:pointer;transition:transform .15s,filter .15s}
+button:hover{filter:brightness(.97);transform:translateY(-1px)}
+button:focus-visible{outline:3px solid #f59e0b;outline-offset:2px}
+.secondary{background:#e0f2fe;color:#075985}
+#arena{height:390px;position:relative;overflow:hidden;border-radius:16px;background:radial-gradient(circle at 15% 20%,#ffffffaa 0 3px,transparent 4px),linear-gradient(180deg,#bae6fd,#a5f3fc 60%,#bbf7d0);border:2px solid #7dd3fc}
+#arena:after{content:"";position:absolute;bottom:0;left:0;right:0;height:48px;background:linear-gradient(180deg,#86efac99,#4ade8080);pointer-events:none}
+.ball{position:absolute;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;color:#18334b;font-size:20px;font-weight:900;border:3px solid #ffffffd9;box-shadow:0 5px 10px #164e6330,inset -5px -7px 0 #00000012;cursor:pointer;z-index:2;user-select:none}
+.ball:after{content:"";position:absolute;width:13px;height:8px;border-radius:50%;background:#ffffffaa;top:9px;left:12px;transform:rotate(-35deg)}
+.ball.done{background:#86efac!important;color:#14532d;cursor:not-allowed;opacity:.85}
+.ball.done:before{content:"✓";position:absolute;right:-5px;top:-8px;background:white;color:#16a34a;border-radius:50%;font-size:16px;width:22px;height:22px;display:grid;place-items:center;border:1px solid #86efac}
+.hint{text-align:center;font-size:13px;color:#286078;margin:10px 0 2px}
+.panel{margin-top:16px;display:none}
+.panel.show{display:block;animation:pop .25s ease}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.question-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{background:#fef3c7;color:#92400e;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:900}
+.animal{font-size:52px;line-height:1.2;margin:10px 0 2px}
+#question{font-size:clamp(19px,3vw,25px);font-weight:900;margin:6px 0 14px}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.answer{background:#eff6ff;color:#17436a;text-align:left;border:2px solid #bfdbfe;min-height:54px}
+.answer.correct{background:#dcfce7;border-color:#22c55e;color:#14532d}
+.answer.wrong{background:#fee2e2;border-color:#ef4444;color:#991b1b}
+.answer:disabled{cursor:default;opacity:1}
+.feedback{margin:14px 0 8px;padding:12px 14px;border-radius:13px;background:#f0fdf4;border:1px solid #bbf7d0;display:none;line-height:1.5}
+.feedback.show{display:block}
+.open-guidance{background:#f0f9ff;border:1px dashed #7dd3fc;padding:12px;border-radius:12px;margin:10px 0;line-height:1.5}
+.teacher-score{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.score100{background:#bbf7d0;color:#14532d}.score50{background:#fef08a;color:#854d0e}.score0{background:#fecaca;color:#991b1b}
+.next{background:#2563eb;color:white;margin-top:10px}
+#oralNext{display:none}
+.summary{display:none;text-align:center;padding:25px 18px;margin-top:16px;background:#fff;border-radius:20px;box-shadow:0 5px 18px #164e6310}
+.summary.show{display:block}
+.summary h2{font-size:clamp(27px,5vw,38px);color:#0369a1;margin:4px 0 10px}
+.result-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}
+.result-grid div{background:#eff6ff;border-radius:14px;padding:12px}
+.result-grid strong{display:block;font-size:25px;color:#0369a1}
+#finalScore{font-size:44px;font-weight:1000;color:#16a34a}
+#replay{background:#16a34a;color:white;font-size:17px;padding:14px 25px}
+footer{text-align:center;color:#47718a;font-size:12px;padding:18px}
+@media(max-width:620px){.info,.stats{grid-template-columns:1fr}.answers{grid-template-columns:1fr}#arena{height:440px}.ball{width:52px;height:52px}.result-grid{grid-template-columns:1fr 1fr}.brand{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="head"><div><div class="brand">🫧 BounceQuiz AI</div><div class="subtitle">Ayo bermain sambil mengenal tempat hidup binatang!</div></div><div class="pill">🌊 Petualangan Laut & Darat</div></div></header>
+<main>
+  <section class="info">
+    <div><b>Mata Pelajaran</b><span>🐾 BINATANG</span></div>
+    <div><b>Materi</b><span>Binatang Laut dan Darat</span></div>
+    <div><b>Kelas</b><span>TK B</span></div>
+  </section>
+  <section class="stats">
+    <div class="stat">Terjawab<strong id="progressText">0 / 15</strong></div>
+    <div class="stat">Skor Benar<strong id="correctText">0</strong></div>
+    <div class="stat">Nilai Sementara<strong id="scoreText">0</strong></div>
+  </section>
+  <div class="progress"><div id="progressBar"></div></div>
+  <section class="game-wrap">
+    <div class="game-title"><h2>🎈 Pilih bola bernomor!</h2><div class="controls"><button class="secondary" id="helpBtn">❔ Cara Bermain</button><button class="secondary" id="soundBtn">🔊 Suara: Aktif</button></div></div>
+    <div id="arena" aria-label="Area bola memantul"></div>
+    <p class="hint">Klik satu bola untuk membuka tantangan. Bola yang sudah selesai akan memiliki tanda centang.</p>
+  </section>
+  <section class="panel" id="questionPanel" aria-live="polite">
+    <div class="question-head"><span class="tag" id="typeTag">PILIHAN GANDA</span><span class="tag" id="numberTag">BOLA 1</span></div>
+    <div class="animal" id="animal">🐬</div>
+    <div id="question"></div>
+    <div class="answers" id="answers"></div>
+    <div id="oralArea" style="display:none">
+      <div class="open-guidance"><b>🎤 Pertanyaan lisan untuk anak:</b><div id="oralPrompt"></div><br><b>Catatan guru – indikator jawaban:</b><div id="indicator"></div><br><b>Rubrik:</b> 100 = sangat tepat, 50 = sebagian benar, 0 = belum tepat.</div>
+      <div class="teacher-score">
+        <button class="score100" data-score="100">Sangat Tepat · 100</button>
+        <button class="score50" data-score="50">Cukup Tepat · 50</button>
+        <button class="score0" data-score="0">Belum Tepat · 0</button>
+      </div>
+    </div>
+    <div class="feedback" id="feedback"></div>
+    <button class="next" id="nextBtn" style="display:none">Lanjut ➜</button>
+  </section>
+  <section class="summary" id="summary">
+    <div style="font-size:55px">🏆🎉🐠</div>
+    <h2>BounceQuiz Selesai!</h2>
+    <p>Hebat! Semua bola sudah kamu selesaikan.</p>
+    <div class="result-grid">
+      <div>Jumlah Soal<strong id="totalResult">15</strong></div>
+      <div>Jawaban Benar<strong id="rightResult">0</strong></div>
+      <div>Jawaban Salah<strong id="wrongResult">0</strong></div>
+      <div>Skor Asesmen Lisan<strong id="oralResult">0</strong></div>
+      <div>Soal Lisan Dinilai<strong id="oralCountResult">0</strong></div>
+      <div>Nilai Akhir<strong id="finalScore">0</strong></div>
+    </div>
+    <button id="replay">🔄 Main Lagi</button>
+  </section>
+</main>
+<footer>BounceQuiz AI · Belajar binatang dengan gembira 🌈</footer>
+<script>
+const questions = [
+ {type:"mc",emoji:"🐬",q:"Lumba-lumba hidup di mana?",opts:["Di laut","Di kandang ayam","Di pohon","Di rumah"],a:0,why:"Betul! Lumba-lumba hidup dan berenang di laut."},
+ {type:"mc",emoji:"🐱",q:"Kucing termasuk binatang yang hidup di ...",opts:["Laut","Darat","Awan","Dalam batu"],a:1,why:"Hebat! Kucing adalah binatang darat."},
+ {type:"mc",emoji:"🐙",q:"Gurita biasanya tinggal di ...",opts:["Sarang di pohon","Kandang","Laut","Rumput"],a:2,why:"Benar! Gurita hidup di laut."},
+ {type:"mc",emoji:"🐄",q:"Manakah binatang darat?",opts:["Paus","Sapi","Hiu","Ubur-ubur"],a:1,why:"Sapi hidup di darat. Paus, hiu, dan ubur-ubur hidup di laut."},
+ {type:"mc",emoji:"🦈",q:"Hiu adalah binatang yang hidup di ...",opts:["Laut","Kebun","Kandang","Atap rumah"],a:0,why:"Ya! Hiu berenang dan hidup di laut."},
+ {type:"mc",emoji:"🐘",q:"Gajah termasuk kelompok binatang ...",opts:["Laut","Darat","Terbang","Air tawar saja"],a:1,why:"Gajah berjalan dan hidup di darat."},
+ {type:"mc",emoji:"🦀",q:"Kepiting laut termasuk binatang ...",opts:["Darat","Laut","Hutan","Udara"],a:1,why:"Kepiting laut hidup di laut dan pantai."},
+ {type:"mc",emoji:"🐔",q:"Ayam biasanya hidup di ...",opts:["Laut dalam","Kandang di darat","Terumbu karang","Awan"],a:1,why:"Ayam adalah binatang darat yang sering tinggal di kandang."},
+ {type:"mc",emoji:"🐳",q:"Pilih pasangan binatang yang sama-sama hidup di laut.",opts:["Paus dan ikan","Kucing dan sapi","Ayam dan kambing","Gajah dan kelinci"],a:0,why:"Paus dan ikan sama-sama hidup di laut."},
+ {type:"mc",emoji:"🐴",q:"Kuda dan kambing dikelompokkan sebagai binatang ...",opts:["Laut","Darat","Terumbu karang","Ikan"],a:1,why:"Kuda dan kambing hidup di darat."},
+ {type:"mc",emoji:"🐢",q:"Penyu hidup di laut dan naik ke pantai untuk bertelur. Penyu termasuk kelompok ...",opts:["Binatang laut","Binatang yang hidup di pohon","Binatang ternak","Burung"],a:0,why:"Penyu hidup di laut. Penyu betina naik ke pantai untuk bertelur."},
+ {type:"oral",emoji:"🐠",q:"Coba sebutkan satu binatang laut dan satu binatang darat!",prompt:"Sebutkan satu binatang laut dan satu binatang darat.",indicator:"Anak menyebut satu contoh binatang laut (misalnya ikan/paus) dan satu binatang darat (misalnya kucing/sapi)."},
+ {type:"oral",emoji:"🐟",q:"Mengapa ikan tidak kita kelompokkan sebagai binatang darat?",prompt:"Mengapa ikan termasuk binatang laut?",indicator:"Anak menyebut ikan hidup atau berenang di air/laut. Terima jawaban sederhana yang sesuai."},
+ {type:"oral",emoji:"🐘",q:"Jika kamu melihat gajah dan lumba-lumba, mana yang termasuk binatang darat? Mengapa?",prompt:"Pilih gajah atau lumba-lumba sebagai binatang darat. Jelaskan alasannya.",indicator:"Anak memilih gajah dan menyebut gajah hidup atau berjalan di darat."},
+ {type:"oral",emoji:"🦀",q:"Kelompokkan kepiting laut, ayam, dan paus. Mana yang hidup di laut?",prompt:"Dari kepiting laut, ayam, dan paus, sebutkan binatang yang hidup di laut.",indicator:"Anak menyebut kepiting laut dan paus. Ayam dikelompokkan sebagai binatang darat."}
+];
+const arena=document.getElementById('arena'), panel=document.getElementById('questionPanel');
+let balls=[], done=new Set(), current=null, scores={}, soundOn=true, raf=null, lastTime=0;
+const colors=['#fda4af','#fde68a','#a7f3d0','#bfdbfe','#d8b4fe','#fdba74','#99f6e4','#fbcfe8','#c4b5fd','#bef264','#f9a8d4','#93c5fd','#fcd34d','#86efac','#f0abfc'];
+function beep(freq=600,duration=.09){if(!soundOn)return;try{const C=window.AudioContext||window.webkitAudioContext;const ctx=new C();const o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.frequency.value=freq;g.gain.value=.06;o.start();o.stop(ctx.currentTime+duration);o.onended=()=>ctx.close()}catch(e){}}
+function updateStats(){
+ const n=done.size, totalScore=Object.values(scores).reduce((a,b)=>a+b,0), correct=Object.values(scores).filter(s=>s===100).length;
+ document.getElementById('progressText').textContent=`${n} / 15`;
+ document.getElementById('correctText').textContent=correct;
+ document.getElementById('scoreText').textContent=totalScore;
+ document.getElementById('progressBar').style.width=(n/15*100)+'%';
+ if(n===15) showSummary();
+}
+function createBalls(){
+ arena.innerHTML='';balls=[];
+ const w=arena.clientWidth,h=arena.clientHeight;
+ questions.forEach((q,i)=>{
+  const el=document.createElement('button');el.className='ball';el.textContent=i+1;el.style.background=colors[i];
+  const r=27;const b={id:i,x:20+Math.random()*Math.max(10,w-70),y:20+Math.random()*Math.max(10,h-70),vx:(Math.random()>.5?1:-1)*(45+Math.random()*45),vy:(Math.random()>.5?1:-1)*(40+Math.random()*55),el};
+  el.style.left=b.x+'px';el.style.top=b.y+'px';el.setAttribute('aria-label','Bola nomor '+(i+1));
+  el.addEventListener('click',()=>openQuestion(i));arena.appendChild(el);balls.push(b);
+ });
+}
+function animate(t){
+ if(!lastTime)lastTime=t;let dt=Math.min((t-lastTime)/1000,.035);lastTime=t;
+ const w=arena.clientWidth,h=arena.clientHeight, size=58;
+ balls.forEach(b=>{
+  if(done.has(b.id))return;
+  b.x+=b.vx*dt;b.y+=b.vy*dt;
+  if(b.x<0){b.x=0;b.vx=Math.abs(b.vx)}if(b.x>w-size){b.x=w-size;b.vx=-Math.abs(b.vx)}
+  if(b.y<0){b.y=0;b.vy=Math.abs(b.vy)}if(b.y>h-size){b.y=h-size;b.vy=-Math.abs(b.vy)}
+  b.el.style.transform=`translate(${b.x-b.el.offsetLeft}px,${b.y-b.el.offsetTop}px)`;
+  b.el.style.left=b.x+'px';b.el.style.top=b.y+'px';b.el.style.transform='none';
+ });
+ raf=requestAnimationFrame(animate);
+}
+function openQuestion(i){
+ if(done.has(i))return;
+ current=i;const q=questions[i];
+ panel.classList.add('show');document.getElementById('typeTag').textContent=q.type==='mc'?'PILIHAN GANDA':'JAWABAN LISAN';
+ document.getElementById('numberTag').textContent='BOLA '+(i+1);
+ document.getElementById('animal').textContent=q.emoji;
+ document.getElementById('question').textContent=q.q;
+ const answers=document.getElementById('answers'),oral=document.getElementById('oralArea'),feedback=document.getElementById('feedback');
+ answers.innerHTML='';feedback.className='feedback';feedback.innerHTML='';document.getElementById('nextBtn').style.display='none';
+ if(q.type==='mc'){
+  answers.style.display='grid';oral.style.display='none';
+  q.opts.forEach((opt,j)=>{const btn=document.createElement('button');btn.className='answer';btn.textContent=String.fromCharCode(65+j)+'. '+opt;btn.onclick=()=>answerMC(j);answers.appendChild(btn)});
+ }else{
+  answers.style.display='none';oral.style.display='block';
+  document.getElementById('oralPrompt').textContent=q.prompt;
+  document.getElementById('indicator').textContent=q.indicator;
+  document.querySelectorAll('[data-score]').forEach(btn=>{btn.disabled=false;btn.onclick=()=>scoreOral(Number(btn.dataset.score))});
+ }
+ panel.scrollIntoView({behavior:'smooth',block:'nearest'});beep(520);
+}
+function answerMC(j){
+ const q=questions[current],btns=[...document.querySelectorAll('.answer')],correct=j===q.a;
+ btns.forEach((b,k)=>{b.disabled=true;if(k===q.a)b.classList.add('correct');if(k===j&&!correct)b.classList.add('wrong')});
+ scores[current]=correct?100:0;done.add(current);balls[current].el.classList.add('done');balls[current].el.disabled=true;
+ const f=document.getElementById('feedback');f.className='feedback show';f.innerHTML=(correct?'🌟 <b>Hebat! Jawabanmu benar!</b> ':'💛 <b>Tidak apa-apa, ayo belajar lagi!</b> ')+q.why;
+ document.getElementById('nextBtn').style.display='inline-block';beep(correct?850:260);updateStats();
+}
+function scoreOral(score){
+ if(current===null||done.has(current))return;
+ scores[current]=score;done.add(current);balls[current].el.classList.add('done');balls[current].el.disabled=true;
+ document.querySelectorAll('[data-score]').forEach(b=>b.disabled=true);
+ const f=document.getElementById('feedback');f.className='feedback show';
+ f.innerHTML=score===100?'🌟 <b>Penilaian: sangat tepat (100).</b> Terima kasih sudah menjawab!':score===50?'👏 <b>Penilaian: cukup tepat (50).</b> Bagus, terus berlatih!':'💛 <b>Penilaian: belum tepat (0).</b> Tidak apa-apa, kita belajar bersama.';
+ document.getElementById('nextBtn').style.display='inline-block';beep(score===100?850:score===50?560:260);updateStats();
+}
+document.getElementById('nextBtn').onclick=()=>{panel.classList.remove('show');current=null;if(done.size===15)showSummary()};
+function showSummary(){
+ panel.classList.remove('show');const mc=questions.filter(q=>q.type==='mc').length;
+ const oralIds=questions.map((q,i)=>q.type==='oral'?i:null).filter(i=>i!==null);
+ const oralScores=oralIds.filter(i=>scores[i]!==undefined).map(i=>scores[i]);
+ const correct=Object.values(scores).filter(s=>s===100).length;
+ const wrong=Object.values(scores).filter(s=>s===0).length;
+ const oralTotal=oralScores.reduce((a,b)=>a+b,0);
+ const total=Object.values(scores).reduce((a,b)=>a+b,0);
+ const final=Math.round(total/(questions.length*100)*100);
+ document.getElementById('rightResult').textContent=correct;
+ document.getElementById('wrongResult').textContent=wrong;
+ document.getElementById('oralResult').textContent=oralTotal;
+ document.getElementById('oralCountResult').textContent=oralScores.length+' / 4';
+ document.getElementById('finalScore').textContent=final;
+ document.getElementById('summary').classList.add('show');
+ document.getElementById('summary').scrollIntoView({behavior:'smooth'});
+}
+document.getElementById('helpBtn').onclick=()=>alert('Cara bermain:\\n1. Klik salah satu bola bernomor.\\n2. Untuk pilihan ganda, pilih jawaban A-D.\\n3. Untuk soal lisan, dengarkan anak menjawab lalu guru memilih skor.\\n4. Selesaikan semua 15 bola. Selamat bermain!');
+document.getElementById('soundBtn').onclick=()=>{soundOn=!soundOn;document.getElementById('soundBtn').textContent=soundOn?'🔊 Suara: Aktif':'🔇 Suara: Mati';if(soundOn)beep()};
+document.getElementById('replay').onclick=()=>{done=new Set();scores={};current=null;document.getElementById('summary').classList.remove('show');panel.classList.remove('show');updateStats();createBalls()};
+window.addEventListener('resize',()=>{balls.forEach(b=>{b.x=Math.min(b.x,arena.clientWidth-58);b.y=Math.min(b.y,arena.clientHeight-58)})});
+createBalls();raf=requestAnimationFrame(animate);
+</script>
+</body>
+</html>
